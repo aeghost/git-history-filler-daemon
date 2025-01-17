@@ -25,16 +25,16 @@ let content_generator env =
   Path.mkdir ~perm:0o776 (changes_folder out);
   Path.(save ~create:(`If_missing 0o644)) (changes_folder out |> file) Buffer.(contents b)
 
-let run env cmd =
+let run ?(silent = true) env cmd =
   let output = Buffer.create 1024 in
   let stderr = Buffer.create 1024 in
   Process.run
     ~stdout:(Flow.(buffer_sink output))
     ~stderr:(Flow.(buffer_sink stderr))
     ~cwd:(Stdenv.cwd env)
-    Eio.Stdenv.(process_mgr env)
+    Stdenv.(process_mgr env)
     cmd;
-  Fmt.pr "@.Running: %a@.Out: %a@.Err: %a@." Fmt.(list string) cmd Fmt.buffer output Fmt.buffer stderr;
+  if not silent then Fmt.pr "@.Running: %a@.Out: %a@.Err: %a@." Fmt.(list ~sep:(any " ") string) cmd Fmt.buffer output Fmt.buffer stderr;
   Buffer.contents output
 
 let git_commit env =
@@ -43,9 +43,14 @@ let git_commit env =
   let _ = run env ["git"; "commit"; "-m"; fortune] in
   ()
 
+let git_push env =
+  let _ = run ~silent:false env ["git"; "push"; "HEAD:next/main"] in
+  ()
+
 let main env =
   content_generator env;
-  git_commit env
+  git_commit env;
+  git_push env
 
 let () =
   Random.self_init ();
