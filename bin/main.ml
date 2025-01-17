@@ -13,8 +13,8 @@ open Eio
 let changes_folder dir = Path.(dir / "process")
 let file dir = Path.(dir / "content")
 
-let content_generator out =
-  Random.self_init ();
+let content_generator env =
+  let out = Eio.Stdenv.cwd env in
   let sz = Random.int 1000 in
   let b = Buffer.(create 1024) in
   let bf = Fmt.with_buffer b in
@@ -25,9 +25,29 @@ let content_generator out =
   Path.mkdir ~perm:0o776 (changes_folder out);
   Path.(save ~create:(`If_missing 0o644)) (changes_folder out |> file) Buffer.(contents b)
 
-let main env =
-  let out = Eio.Stdenv.cwd env in
-  content_generator out
+let run env cmd =
+  let output = Buffer.create 1024 in
+  let stderr = Buffer.create 1024 in
+  Process.run
+    ~stdout:(Flow.(buffer_sink output))
+    ~stderr:(Flow.(buffer_sink stderr))
+    ~cwd:(Stdenv.cwd env)
+    Eio.Stdenv.(process_mgr env)
+    cmd;
+  Fmt.pr "@.Running: %a@.Out: %a@.Err: %a@." Fmt.(list string) cmd Fmt.buffer output Fmt.buffer stderr;
+  Buffer.contents output
 
-let () = Eio_main.run main
+let git_commit env =
+  let _ = run env ["git"; "add"; "process/content"] in
+  let fortune = run env ["fortune";] in
+  let _ = run env ["git"; "commit"; "-m"; fortune] in
+  ()
+
+let main env =
+  content_generator env;
+  git_commit env
+
+let () =
+  Random.self_init ();
+  Eio_main.run main
 
