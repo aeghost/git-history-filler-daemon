@@ -44,7 +44,7 @@ let git_commit env =
   ()
 
 let git_push env =
-  let _ = run ~silent:false env ["git"; "push"; "HEAD:next/main"] in
+  let _ = run ~silent:false env ["git"; "push"; "origin"; "HEAD:next/main"] in
   ()
 
 let main env =
