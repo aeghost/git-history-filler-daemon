@@ -40,27 +40,24 @@ let run ?(silent = true) env cmd =
 let git_commit env =
   let _ = run env ["git"; "add"; "process/content"] in
   let fortune = run env ["fortune";] in
-  let _ = run env ["git"; "commit"; "-m"; fortune] in
+  let _ = run env ~silent:false ["git"; "commit"; "-m"; fortune] in
   ()
 
 let git_push env =
   let _ = run ~silent:false env ["git"; "push"; "origin"; "HEAD:next/main"] in
   ()
 
-let git_rm_branch env =
-  let _ = run ~silent:false env ["git"; "push"; "origin"; ":next/main"] in
-  ()
-
 let main env =
-  while true do
+  let flag = ref true in
+  while !flag do
     content_generator env;
     git_commit env;
-    git_push env;
-    Unix.sleep (Random.(int 100) + 100)
+    Unix.sleep (Random.(int 100) + 100);
+    if Unix.(gmtime @@ gettimeofday ()).tm_hour >= 18 then
+      flag := false;
   done;
-  git_rm_branch env
+  git_push env
 
-let () =
-  Random.self_init ();
-  Eio_main.run main
+let () = Random.self_init ()
+let () = Eio_main.run main
 
