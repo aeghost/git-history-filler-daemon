@@ -47,10 +47,18 @@ let git_push env =
   let _ = run ~silent:false env ["git"; "push"; "origin"; "HEAD:next/main"] in
   ()
 
+let git_rm_branch env =
+  let _ = run ~silent:false env ["git"; "push"; "origin"; ":next/main"] in
+  ()
+
 let main env =
-  content_generator env;
-  git_commit env;
-  git_push env
+  while true do
+    content_generator env;
+    git_commit env;
+    git_push env;
+    Unix.sleep (Random.(int 100) + 100)
+  done;
+  git_rm_branch env
 
 let () =
   Random.self_init ();
