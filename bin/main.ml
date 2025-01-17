@@ -1,5 +1,4 @@
 (** [GITHUB FILLER DAEMON]
-    @copyright (C) 2024 ChapsVision -- ALL RIGHTS RESERVED.
     @author Matthieu GOSSET
     @maintainers
       Matthieu GOSSET <mgosset@chapsvision.com>
